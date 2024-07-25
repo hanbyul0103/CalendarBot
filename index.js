@@ -44,7 +44,7 @@ cron.schedule('0 0 1 * *', () => {
     const channelID = '1263159851740172479';
     const channel = client.channels.cache.get(channelID);
     if (channel) {
-        channel.send("> calendar");
+        channel.send("/calendar");
     }
     else {
         channel.send("채널을 찾을 수 없습니다.");
