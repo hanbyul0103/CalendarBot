@@ -163,7 +163,7 @@ async function generateCalendarImage(message, today) {
 
         // 이미지 파일을 임베드에 추가
         const calendarEmbed = new MessageEmbed()
-            .setTitle(`엘리베이터의 주는 초록색으로\n자유의 날은 빨간 원으로 표시됩니다.`)
+            .setTitle(`7월의 기숙사 현황입니다.`)
             .setColor('WHITE')
             .setImage('attachment://calendar.png');
 
