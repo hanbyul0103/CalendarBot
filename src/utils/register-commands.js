@@ -31,6 +31,11 @@ const commands = [
             },
         ],
     },
+
+    {
+        name: "ping",
+        description: 'reply ping',
+    }
 ];
 
 const rest = new REST({ version: '10' }).setToken(config.token);

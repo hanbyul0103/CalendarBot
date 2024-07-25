@@ -2,6 +2,7 @@ const config = require('./src/config/config.json');
 const { Client, IntentsBitField, EmbedBuilder } = require('discord.js');
 
 const { handleSendCalendar } = require('./src/commands/calender');
+const { handleSendPing } = require('./src/commands/ping');
 
 const client = new Client({
     intents: [
@@ -35,8 +36,11 @@ client.on('interactionCreate', async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
     if (interaction.commandName === "calendar") {
-
         await handleSendCalendar(interaction);
+    }
+
+    if (interaction.commandName === "ping") {
+        await handleSendPing(interaction);
     }
 });
 
