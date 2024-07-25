@@ -1,6 +1,8 @@
 const config = require('./src/config/config.json');
 const { Client, IntentsBitField, EmbedBuilder } = require('discord.js');
 
+const { handleSendCalendar } = require('./src/commands/calender');
+
 const client = new Client({
     intents: [
         IntentsBitField.Flags.Guilds,
@@ -29,15 +31,12 @@ client.on('guildMemberAdd', async member => {
     }
 });
 
-client.on('interactionCreate', (interaction) => {
+client.on('interactionCreate', async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
     if (interaction.commandName === "calendar") {
-        const action = interaction.options.get('action')?.value;
-        const event = interaction.options.get('event')?.value;
-        const day = interaction.options.get('day')?.value;
 
-        interaction.reply(`${action}, ${event}, ${day}`);
+        await handleSendCalendar(interaction);
     }
 });
 

@@ -1,79 +1,69 @@
-const { Client, GatewayIntentBits, Partials } = require('discord.js');
-const moment = require('moment-timezone');
 const { createCanvas, registerFont } = require('canvas');
-const fs = require('fs');
+const { EmbedBuilder } = require('discord.js'); // MessageEmbed만 사용
 const path = require('path');
-const { token } = require('../config/config.json');
+const fs = require('fs');
+const moment = require('moment-timezone');
 
-// 한글 폰트를 사용할 수 있도록 폰트 파일을 등록합니다. (나눔고딕 폰트 예시)
-// registerFont(path.join(__dirname, './Fonts/nanumGothic.ttf'), { family: 'Nanum Gothic' });
+// 폰트 등록
+registerFont(path.join(__dirname, '../../Fonts', 'NanumGothic.ttf'), { family: 'Nanum Gothic' });
 
-const timeZone = 'Asia/Seoul';
-const colorMap = {
-    'e': 'rgb(100, 255, 100)',
-    'f': 'rgb(255, 100, 100)',
-    'SUNDAY': 'rgb(255, 100, 100)',
-    'SATURDAY': 'rgb(100, 100, 255)'
-};
-
+// 캘린더 데이터
 let calendarData = {};
 
+// 제목과 헤더의 크기 정의
 const scaleFactor = 3;
-const titleHeight = 140 * scaleFactor;
+const titleHeight = 140 * scaleFactor; // 제목의 공간을 140으로 설정
 const headerHeight = 100 * scaleFactor;
 
-const client = new Client({ 
-    intents: [GatewayIntentBits.Guilds],
-    partials: [Partials.Message, Partials.Channel, Partials.Reaction]
-});
+const colorMap = {
+    'e': 'rgb(100, 255, 100)', // 이벤트 타입 e에 사용
+    'f': 'rgb(255, 100, 100)', // 이벤트 타입 f에 사용 (동그라미 색상)
+    'SUNDAY': 'rgb(255, 100, 100)', // 연한 빨간색 (일요일)
+    'SATURDAY': 'rgb(100, 100, 255)' // 연한 파란색 (토요일)
+};
 
-client.on('interactionCreate', async interaction => {
-    if (!interaction.isCommand()) return;
+module.exports = {
+    handleSendCalendar: async (interaction) => {
+        const action = interaction.options.get('action')?.value;
+        const event = interaction.options.get('event')?.value;
+        const day = interaction.options.get('day')?.value;
 
-    const { commandName } = interaction;
+        const timeZone = 'Asia/Seoul';
 
-    if (commandName === '캘린더') {
         const today = moment().tz(timeZone);
         const year = today.year();
         const month = today.month() + 1;
 
-        const subCommand = interaction.options.getSubcommand();
-
-        if (subCommand === 'add') {
-            const eventType = interaction.options.getString('type');
-            const day = interaction.options.getInteger('day');
-
-            if (!['e', 'f'].includes(eventType)) {
-                return await interaction.reply("유효하지 않은 이벤트 타입입니다.");
+        if (action === "add") {
+            if (!['e', 'f'].includes(event)) {
+                return interaction.reply("유효하지 않은 이벤트 타입입니다.");
             }
 
-            if (day < 1 || day > 31) {
-                return await interaction.reply("유효하지 않은 날짜입니다.");
+            if (!/^\d+$/.test(day) || day < 1 || day > 31) {
+                return interaction.reply("유효하지 않은 날짜입니다.");
             }
 
-            if (eventType === 'e') {
+            if (event === 'e') {
                 addEventE(year, month, day);
-                return await interaction.reply(`엘리베이터의 주가 ${day}일로부터 주말을 제외한 5일로 설정되었습니다.`);
+                return interaction.reply(`엘리베이터의 주가 ${day}일로부터 주말을 제외한 5일로 설정되었습니다.`);
             }
 
-            if (eventType === 'f') {
+            if (event === 'f') {
                 addEventF(year, month, day);
-                return await interaction.reply(`${day}일에 자유의 날 이벤트가 추가되었습니다.`);
+                return interaction.reply(`${day}일에 자유의 날 이벤트가 추가되었습니다.`);
             }
-        } else if (subCommand === 'remove') {
-            const eventType = interaction.options.getString('type');
-
-            if (!['e', 'f'].includes(eventType)) {
-                return await interaction.reply("유효하지 않은 이벤트 타입입니다.");
+        } else if (action === "remove") {
+            if (!['e', 'f'].includes(event)) {
+                return interaction.reply("유효하지 않은 이벤트 타입입니다.");
             }
 
-            const colorToRemove = colorMap[eventType];
-            let removed = removeEvents(eventType, colorToRemove);
+            const colorToRemove = colorMap[event];
+            let removed = removeEvents(event, colorToRemove);
 
             if (removed) {
-                return await interaction.reply(`${eventType === 'e' ? '엘리베이터의 주가' : '자유의 날'} 모든 이벤트가 삭제되었습니다.`);
+                return interaction.reply(`${event === 'e' ? '엘리베이터의 주가' : '자유의 날'} 모든 이벤트가 삭제되었습니다.`);
             } else {
-                return await interaction.reply("해당 이벤트 타입의 이벤트가 없습니다.");
+                return interaction.reply("해당 이벤트 타입의 이벤트가 없습니다.");
             }
         }
 
@@ -85,13 +75,11 @@ client.on('interactionCreate', async interaction => {
             await interaction.reply('캘린더 이미지 생성 중 오류가 발생했습니다.');
         }
     }
-});
-
-client.login(token);
+};
 
 // 이벤트 타입 e의 이벤트 추가
 function addEventE(year, month, day) {
-    let startDate = moment.tz(`${year}-${String(month).padStart(2, '0')}-${day}`, timeZone);
+    let startDate = moment.tz(`${year}-${String(month).padStart(2, '0')}-${day}`, 'Asia/Seoul');
     let daysAdded = 0;
 
     while (daysAdded < 5) {
@@ -113,16 +101,12 @@ function addEventF(year, month, day) {
 }
 
 // 이벤트 삭제
-function removeEvents(eventType, colorToRemove) {
+function removeEvents(event, colorToRemove) {
     let removed = false;
 
     for (const [date, events] of Object.entries(calendarData)) {
-        calendarData[date] = events.filter(event => {
-            if (eventType === 'e' && event.color === colorToRemove) {
-                removed = true;
-                return false;
-            }
-            if (eventType === 'f' && event.type === 'circle' && event.color === colorToRemove) {
+        calendarData[date] = events.filter(ev => {
+            if (ev.color === colorToRemove && (event === 'e' || (event === 'f' && ev.type === 'circle'))) {
                 removed = true;
                 return false;
             }
@@ -174,9 +158,9 @@ async function generateCalendarImage(interaction, today) {
         fs.writeFileSync(filePath, buffer);
 
         // 이미지 파일을 임베드에 추가
-        const calendarEmbed = new MessageEmbed()
-            .setTitle(`7월의 기숙사 현황입니다.`)
-            .setColor('WHITE')
+        const calendarEmbed = new EmbedBuilder()
+            .setTitle('엘리베이터의 주는 초록색으로,\n자유의 날은 빨간 원으로 표시됩니다.')
+            .setColor('#FFFFFF')
             .setImage('attachment://calendar.png');
 
         await interaction.reply({ embeds: [calendarEmbed], files: [{ attachment: filePath, name: 'calendar.png' }] });
@@ -194,7 +178,7 @@ async function generateCalendarImage(interaction, today) {
 }
 
 // 요일 헤더 그리기
-function drawWeekHeaders(ctx, scaleFactor, cellSize) {
+function drawWeekHeaders(ctx, scaleFactor, headerHeight, cellSize) {
     const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
     const headerBackgroundColor = 'lightgray';
     let xOffset = 0;
