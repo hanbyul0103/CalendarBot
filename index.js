@@ -1,8 +1,11 @@
 const config = require('./src/config/config.json');
-const { Client, IntentsBitField, EmbedBuilder } = require('discord.js');
+const { Client, IntentsBitField } = require('discord.js');
 
-const { handleSendCalendar } = require('./src/commands/calender');
 const { handleSendPing } = require('./src/commands/ping');
+const { handleSendCalendar } = require('./src/commands/calender');
+const { handleSendHelp } = require('./src/commands/help');
+const { handleSendFind } = require('./src/commands/find');
+const { handleSendEvent } = require('./src/commands/event');
 
 const client = new Client({
     intents: [
@@ -35,12 +38,20 @@ client.on('guildMemberAdd', async member => {
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
+    if (interaction.commandName === "ping") {
+        await handleSendPing(interaction);
+    }
     if (interaction.commandName === "calendar") {
         await handleSendCalendar(interaction);
     }
-
-    if (interaction.commandName === "ping") {
-        await handleSendPing(interaction);
+    if (interaction.commandName === "help") {
+        await handleSendHelp(interaction);
+    }
+    if (interaction.commandName === "find") {
+        await handleSendFind(interaction);
+    }
+    if (interaction.commandName === "event") {
+        await handleSendEvent(interaction);
     }
 });
 

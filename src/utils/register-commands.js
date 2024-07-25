@@ -3,8 +3,13 @@ const { REST, Routes, ApplicationCommandOptionType } = require('discord.js');
 
 const commands = [
     {
+        name: "ping",
+        description: 'Reply Latency Rate',
+    },
+
+    {
         name: "calendar",
-        description: 'manage calendar',
+        description: 'Manage calendar',
         options: [
             {
                 name: 'action',
@@ -33,9 +38,19 @@ const commands = [
     },
 
     {
-        name: "ping",
-        description: 'reply ping',
-    }
+        name: "help",
+        description: 'Reply to help',
+    },
+
+    {
+        name: "find",
+        description: 'Reply with information about the person you are looking for',
+    },
+
+    {
+        name: "event",
+        description: 'reply event',
+    },
 ];
 
 const rest = new REST({ version: '10' }).setToken(config.token);
