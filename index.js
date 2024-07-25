@@ -1,34 +1,20 @@
 const config = require('./src/config/config.json');
-const { Client, Intents, Collection } = require('discord.js');
-const cron = require('node-cron');
+const { Client, IntentsBitField } = require('discord.js');
+
 const client = new Client({
     intents: [
-        Intents.FLAGS.GUILDS, // 필수로 포함되어야 합니다
-        Intents.FLAGS.GUILD_MESSAGES,
-        Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-        Intents.FLAGS.GUILD_MEMBERS
-        // 필요한 Intents를 여기에 추가하세요
+        IntentsBitField.Flags.Guilds,
+        IntentsBitField.Flags.GuildMembers,
+        IntentsBitField.Flags.GuildMessages,
+        IntentsBitField.Flags.MessageContent
     ],
 });
-client.commands = new Collection();
-const fs = require('fs');
-const commandFiles = fs.readdirSync('./src/commands').filter(file => file.endsWith('.js'));
 
-for (const file of commandFiles) {
-    const command = require(`./src/commands/${file}`);
-    client.commands.set(command.name, command);
-}
+const cron = require('node-cron');
 
-// 이벤트 핸들러 로딩
-const eventFiles = fs.readdirSync('./src/events').filter(file => file.endsWith('.js'));
-for (const file of eventFiles) {
-    const event = require(`./src/events/${file}`);
-    if (event.once) {
-        client.once(event.name, (...args) => event.execute(...args, client));
-    } else {
-        client.on(event.name, (...args) => event.execute(...args, client));
-    }
-}
+client.on('ready', () => {
+    console.log(`Ready! Logged in as ${client.user.tag}`);
+});
 
 client.on('guildMemberAdd', async member => {
     const channelID = '1265224199509901374';
@@ -41,6 +27,11 @@ client.on('guildMemberAdd', async member => {
     if (role) {
         await member.roles.add(role);
     }
+});
+
+client.on('guildCreate', async (guild) => {
+    const guildId = guild.id;
+    await registerCommands(guildId);
 });
 
 cron.schedule('0 0 1 * *', () => {
@@ -57,4 +48,4 @@ cron.schedule('0 0 1 * *', () => {
     timezone: "Asia/Seoul"
 });
 
-client.login(config.TOKEN);
+client.login(config.token);
