@@ -1,5 +1,5 @@
 const config = require('./src/config/config.json');
-const { Client, IntentsBitField } = require('discord.js');
+const { Client, IntentsBitField, EmbedBuilder } = require('discord.js');
 
 const client = new Client({
     intents: [
@@ -29,9 +29,16 @@ client.on('guildMemberAdd', async member => {
     }
 });
 
-client.on('guildCreate', async (guild) => {
-    const guildId = guild.id;
-    await registerCommands(guildId);
+client.on('interactionCreate', (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+
+    if (interaction.commandName === "calendar") {
+        const action = interaction.options.get('action')?.value;
+        const event = interaction.options.get('event')?.value;
+        const day = interaction.options.get('day')?.value;
+
+        interaction.reply(`${action}, ${event}, ${day}`);
+    }
 });
 
 cron.schedule('0 0 1 * *', () => {
